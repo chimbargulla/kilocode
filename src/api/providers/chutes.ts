@@ -7,10 +7,14 @@ import { XmlMatcher } from "../../utils/xml-matcher"
 import { convertToR1Format } from "../transform/r1-format"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStream } from "../transform/stream"
+import { getChutesModels } from "./fetchers/chutes" // kilocode_change
 
 import { BaseOpenAiCompatibleProvider } from "./base-openai-compatible-provider"
 
 export class ChutesHandler extends BaseOpenAiCompatibleProvider<ChutesModelId> {
+	private dynamicModels: Record<string, any> = {} // kilocode_change
+	private modelsFetched = false // kilocode_change
+
 	constructor(options: ApiHandlerOptions) {
 		super({
 			...options,
@@ -89,15 +93,86 @@ export class ChutesHandler extends BaseOpenAiCompatibleProvider<ChutesModelId> {
 		}
 	}
 
-	override getModel() {
-		const model = super.getModel()
-		const isDeepSeekR1 = model.id.includes("DeepSeek-R1")
+	// kilocode_change start
+	/**
+	 * Fetch models dynamically from Chutes AI API if not already fetched
+	 */
+	private async ensureDynamicModels(): Promise<void> {
+		if (this.modelsFetched) {
+			return
+		}
+
+		try {
+			this.dynamicModels = await getChutesModels(this.options.chutesApiKey)
+			this.modelsFetched = true
+			console.log(`Fetched ${Object.keys(this.dynamicModels).length} models from Chutes AI`)
+		} catch (error) {
+			console.warn("Failed to fetch dynamic models from Chutes AI, using static models:", error)
+			// Don't throw - fallback to static models
+			this.modelsFetched = true // Prevent repeated attempts
+		}
+	}
+
+	/**
+	 * Get all available models (static + dynamic)
+	 */
+	private async getAllModels(): Promise<Record<string, any>> {
+		await this.ensureDynamicModels()
+		
+		// Merge static models with dynamic models, with static models taking precedence
+		// for any models that exist in both (to preserve pricing and detailed info)
 		return {
-			...model,
+			...this.dynamicModels,
+			...this.providerModels,
+		}
+	}
+
+	/**
+	 * Get all available model IDs (for external use)
+	 */
+	async getAvailableModels(): Promise<string[]> {
+		const allModels = await this.getAllModels()
+		return Object.keys(allModels)
+	}
+
+	override getModel() {
+		// First try to get from static models
+		const staticModel = super.getModel()
+		if (this.options.apiModelId && this.options.apiModelId in this.providerModels) {
+			const isDeepSeekR1 = staticModel.id.includes("DeepSeek-R1")
+			return {
+				...staticModel,
+				info: {
+					...staticModel.info,
+					temperature: isDeepSeekR1 ? DEEP_SEEK_DEFAULT_TEMPERATURE : this.defaultTemperature,
+				},
+			}
+		}
+
+		// If not in static models, check dynamic models
+		const modelId = this.options.apiModelId || this.defaultProviderModelId
+		const dynamicModelInfo = this.dynamicModels[modelId]
+		
+		if (dynamicModelInfo) {
+			const isDeepSeekR1 = modelId.includes("DeepSeek-R1")
+			return {
+				id: modelId as ChutesModelId, // Cast since dynamic models should be compatible
+				info: {
+					...dynamicModelInfo,
+					temperature: isDeepSeekR1 ? DEEP_SEEK_DEFAULT_TEMPERATURE : this.defaultTemperature,
+				},
+			}
+		}
+
+		// Fallback to default static model
+		const isDeepSeekR1 = staticModel.id.includes("DeepSeek-R1")
+		return {
+			...staticModel,
 			info: {
-				...model.info,
+				...staticModel.info,
 				temperature: isDeepSeekR1 ? DEEP_SEEK_DEFAULT_TEMPERATURE : this.defaultTemperature,
 			},
 		}
 	}
+	// kilocode_change end
 }
