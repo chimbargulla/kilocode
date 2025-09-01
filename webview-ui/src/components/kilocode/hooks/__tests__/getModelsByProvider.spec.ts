@@ -25,6 +25,7 @@ describe("getModelsByProvider", () => {
 			lmstudio: { "test-model": testModel },
 			"io-intelligence": { "test-model": testModel },
 			deepinfra: { "test-model": testModel },
+			chutes: { "test-model": testModel }, // kilocode_change
 		}
 
 		const exceptions = [

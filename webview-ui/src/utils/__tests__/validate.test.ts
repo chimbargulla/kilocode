@@ -60,6 +60,7 @@ describe("Model Validation Functions", () => {
 		lmstudio: {},
 		"io-intelligence": {},
 		deepinfra: {}, // kilocode_change
+		chutes: {}, // kilocode_change
 	}
 
 	const allowAllOrganization: OrganizationAllowList = {
