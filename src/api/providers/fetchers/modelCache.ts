@@ -20,6 +20,7 @@ import { getOllamaModels } from "./ollama"
 import { getLMStudioModels } from "./lmstudio"
 import { getIOIntelligenceModels } from "./io-intelligence"
 import { getDeepInfraModels } from "./deepinfra" // kilocode_change
+import { getChutesModels } from "./chutes" // kilocode_change
 const memoryCache = new NodeCache({ stdTTL: 5 * 60, checkperiod: 5 * 60 })
 
 export /*kilocode_change*/ async function writeModels(router: RouterName, data: ModelRecord) {
@@ -105,6 +106,9 @@ export const getModels = async (options: GetModelsOptions): Promise<ModelRecord>
 				break
 			case "io-intelligence":
 				models = await getIOIntelligenceModels(options.apiKey)
+				break
+			case "chutes": // kilocode_change
+				models = await getChutesModels(options.apiKey, options.baseUrl)
 				break
 			default: {
 				// Ensures router is exhaustively checked if RouterName is a strict union

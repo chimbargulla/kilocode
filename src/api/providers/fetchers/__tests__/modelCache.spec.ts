@@ -25,6 +25,7 @@ vi.mock("../requesty")
 vi.mock("../glama")
 vi.mock("../unbound")
 vi.mock("../io-intelligence")
+vi.mock("../chutes") // kilocode_change
 
 // Then imports
 import type { Mock } from "vitest"
@@ -35,6 +36,7 @@ import { getRequestyModels } from "../requesty"
 import { getGlamaModels } from "../glama"
 import { getUnboundModels } from "../unbound"
 import { getIOIntelligenceModels } from "../io-intelligence"
+import { getChutesModels } from "../chutes" // kilocode_change
 
 const mockGetLiteLLMModels = getLiteLLMModels as Mock<typeof getLiteLLMModels>
 const mockGetOpenRouterModels = getOpenRouterModels as Mock<typeof getOpenRouterModels>
@@ -42,6 +44,7 @@ const mockGetRequestyModels = getRequestyModels as Mock<typeof getRequestyModels
 const mockGetGlamaModels = getGlamaModels as Mock<typeof getGlamaModels>
 const mockGetUnboundModels = getUnboundModels as Mock<typeof getUnboundModels>
 const mockGetIOIntelligenceModels = getIOIntelligenceModels as Mock<typeof getIOIntelligenceModels>
+const mockGetChutesModels = getChutesModels as Mock<typeof getChutesModels> // kilocode_change
 
 const DUMMY_REQUESTY_KEY = "requesty-key-for-testing"
 const DUMMY_UNBOUND_KEY = "unbound-key-for-testing"
@@ -157,6 +160,62 @@ describe("getModels with new GetModelsOptions", () => {
 		expect(mockGetIOIntelligenceModels).toHaveBeenCalled()
 		expect(result).toEqual(mockModels)
 	})
+
+	// kilocode_change start
+	it("calls getChutesModels for chutes provider", async () => {
+		const mockModels = {
+			"deepseek-ai/DeepSeek-R1-0528": {
+				maxTokens: 32768,
+				contextWindow: 163840,
+				supportsPromptCache: false,
+				description: "DeepSeek R1 model with reasoning capabilities",
+			},
+			"Qwen/Qwen3-235B-A22B-Instruct-2507": {
+				maxTokens: 32768,
+				contextWindow: 262144,
+				supportsPromptCache: false,
+				description: "Qwen model series",
+			},
+		}
+		mockGetChutesModels.mockResolvedValue(mockModels)
+
+		const result = await getModels({ provider: "chutes", apiKey: "test-chutes-key" })
+
+		expect(mockGetChutesModels).toHaveBeenCalledWith("test-chutes-key", undefined)
+		expect(result).toEqual(mockModels)
+	})
+
+	it("calls getChutesModels without API key", async () => {
+		const mockModels = {
+			"deepseek-ai/DeepSeek-V3": {
+				maxTokens: 32768,
+				contextWindow: 163840,
+				supportsPromptCache: false,
+				description: "DeepSeek V3 model",
+			},
+		}
+		mockGetChutesModels.mockResolvedValue(mockModels)
+
+		const result = await getModels({ provider: "chutes" })
+
+		expect(mockGetChutesModels).toHaveBeenCalledWith(undefined, undefined)
+		expect(result).toEqual(mockModels)
+	})
+
+	it("calls getChutesModels with custom base URL", async () => {
+		const mockModels = {}
+		mockGetChutesModels.mockResolvedValue(mockModels)
+
+		const result = await getModels({ 
+			provider: "chutes", 
+			apiKey: "test-key", 
+			baseUrl: "https://custom.chutes.ai/v1" 
+		})
+
+		expect(mockGetChutesModels).toHaveBeenCalledWith("test-key", "https://custom.chutes.ai/v1")
+		expect(result).toEqual(mockModels)
+	})
+	// kilocode_change end
 
 	it("handles errors and re-throws them", async () => {
 		const expectedError = new Error("LiteLLM connection failed")
