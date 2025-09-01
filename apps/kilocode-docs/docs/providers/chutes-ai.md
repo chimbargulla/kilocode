@@ -14,9 +14,22 @@ To use Chutes AI with Kilo Code, obtain an API key from the [Chutes AI platform]
 
 ## Supported Models
 
-Kilo Code will attempt to fetch the list of available models from the Chutes AI API. The specific models available will depend on Chutes AI's current offerings.
+Kilo Code **automatically fetches all available models** from the Chutes AI API in real-time. This means you'll always have access to the latest models without needing to update the extension.
 
-Always refer to the official Chutes AI documentation or your dashboard for the most up-to-date list of supported models.
+The extension will:
+- Fetch the complete list of models from `https://llm.chutes.ai/v1/models`
+- Include both well-known models (like DeepSeek, Qwen, Llama series) and any new models added by Chutes AI
+- Cache the model list for performance while ensuring freshness
+- Fall back to a curated list of popular models if the API is temporarily unavailable
+
+**Popular model categories available:**
+- **DeepSeek R1 Series:** Advanced reasoning models with thinking capabilities
+- **DeepSeek V3 Series:** High-performance general-purpose models  
+- **Qwen Series:** Powerful multilingual and coding-focused models
+- **Llama Series:** Open-source models optimized for various tasks
+- **Moonshot Kimi:** Long-context models excellent for document analysis
+
+Always refer to your Kilo Code model dropdown for the most current list, as new models are added regularly.
 
 ## Configuration in Kilo Code
 
@@ -28,5 +41,7 @@ Always refer to the official Chutes AI documentation or your dashboard for the m
 ## Tips and Notes
 
 *   **Free Access:** Chutes AI provides free API access, making it an excellent option for experimentation and development without immediate costs.
+*   **Dynamic Model Loading:** The extension automatically discovers and loads all available models from Chutes AI, so you'll always see the latest offerings without manual updates.
 *   **Model Variety:** The platform offers access to both open-source and proprietary models, giving you flexibility in choosing the right model for your needs.
+*   **Smart Fallbacks:** If a specific model is temporarily unavailable, the extension intelligently falls back to similar alternatives.
 *   **Rate Limits:** As with any free service, be aware of potential rate limits or usage restrictions that may apply to your API key.
